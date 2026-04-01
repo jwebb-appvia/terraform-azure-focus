@@ -6,7 +6,7 @@ data "azurerm_virtual_network" "existing" {
 }
 
 data "azapi_resource_list" "billing_role_definitions" {
-  for_each = var.is_enterprise_customer ? [] : toset(var.billing_account_ids)
+  for_each = var.is_enterprise_customer ? toset([]) : toset(var.billing_account_ids)
 
   type      = "Microsoft.Billing/billingAccounts/billingRoleDefinitions@2024-04-01"
   parent_id = "/providers/Microsoft.Billing/billingAccounts/${each.value}"
