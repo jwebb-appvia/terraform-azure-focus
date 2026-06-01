@@ -242,7 +242,7 @@ Python dependencies are managed using a two-file approach:
    ```bash
    make python-lock
    ```
-   This resolves the full dependency tree for **Linux / Python 3.12** (matching the Function App runtime) and overwrites `requirements.txt` with all packages pinned and hashed. `uv` fetches a Python 3.12 interpreter automatically — no local Python 3.12 or Docker required.
+   This resolves the full dependency tree for **Linux / Python 3.13** (matching the Function App runtime) and overwrites `requirements.txt` with all packages pinned and hashed. `uv` fetches a Python 3.13 interpreter automatically — no local Python 3.13 or Docker required.
 
 4. **Commit both files:**
    ```bash
