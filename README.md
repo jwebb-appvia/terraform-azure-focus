@@ -213,6 +213,42 @@ The backfill start date ()`backfill_start_date`) module terraform variable must 
 - **Zero Trust**: No public network access (except during deployment if `deploy_from_external_network=true`)
 - **Managed Identity**: Azure resources authenticate using system-assigned managed identities
 - **Cross-Cloud Federation**: OIDC federation eliminates need for long-lived AWS credentials
+- **Hash-Pinned Dependencies**: Python packages in `requirements.txt` are pinned to exact versions with SHA256 hashes, ensuring artifact integrity and protecting against supply-chain attacks
+
+### Updating Python Dependencies
+
+Python dependencies are managed using a two-file approach:
+
+| File | Purpose | Edit manually? |
+|---|---|---|
+| `src/cost_export/requirements.in` | Direct dependencies only (7 packages) | **Yes** — this is the source of truth |
+| `src/cost_export/requirements.txt` | Fully resolved lockfile with all transitive deps, each pinned with SHA256 hashes | **No** — always machine-generated |
+
+`requirements.txt` is committed to the repository and is what Azure's Oryx build system installs using `--require-hashes`. It must contain every package in the dependency tree (direct and transitive) pinned with `==` and hashed. Do not edit it by hand.
+
+#### To add, remove, or update a dependency
+
+1. **Edit `src/cost_export/requirements.in`** — add, remove, or change the version of the direct dependency. Versions are pinned with `==`.
+
+   > **Note on boto3/s3fs compatibility:** `boto3` is capped at `<1.43` because `s3fs` pulls in `aiobotocore`, which requires `botocore<1.43.1`. `boto3>=1.43` requires `botocore>=1.43.15`, making the two incompatible. If you bump either package, re-check this constraint.
+
+2. **Install `uv`** if you don't have it (one-time):
+   ```bash
+   brew install uv
+   # or: curl -LsSf https://astral.sh/uv/install.sh | sh
+   ```
+
+3. **Regenerate the lockfile:**
+   ```bash
+   make python-lock
+   ```
+   This resolves the full dependency tree for **Linux / Python 3.13** (matching the Function App runtime) and overwrites `requirements.txt` with all packages pinned and hashed. `uv` fetches a Python 3.13 interpreter automatically — no local Python 3.13 or Docker required.
+
+4. **Commit both files:**
+   ```bash
+   git add src/cost_export/requirements.in src/cost_export/requirements.txt
+   git commit -m "chore: update python dependencies"
+   ```
 
 ## Prerequisites
 
